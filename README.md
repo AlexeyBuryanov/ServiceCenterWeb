@@ -1,6 +1,5 @@
 # Simple Website for Service Center
 
-Used by:
 * ASP.NET Core 2.1;
 * Identity .NET Core;
 * Work with files;

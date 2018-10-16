@@ -1,4 +1,6 @@
-# Simple Website for Service Center
+[license-image]: https://img.shields.io/npm/l/normalize.css.svg?style=flat
+[license-url]: LICENSE
+# Simple Website for Service Center     [![license][license-image]][license-url]
 
 * ASP.NET Core 2.1;
 * Identity .NET Core;

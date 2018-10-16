@@ -1,0 +1,233 @@
+﻿@{
+    ViewData["Title"] = "Типы техники с которыми работает сервисный центр";
+    Layout = "/Views/Shared/_Layout.cshtml";
+}
+
+<br /><br />
+<h2>Список видов техники с которыми работает сервисный центр</h2>
+<br />
+<a asp-area="" asp-controller="AdminPanel" asp-action="Index"
+   title="Панель администратора"
+   class="btn btn-sm btn-primary">
+    <span class="glyphicon glyphicon-arrow-left"></span>&nbsp;Панель администратора
+</a>
+<hr />
+<button id="buttonAdd" class="btn btn-primary btn-sm">
+    <span class="glyphicon glyphicon-plus"></span>&nbsp;Добавить тип техники
+</button>
+<br /><br />
+@*Разметка таблицы*@
+<table id="typetechnics" class="table table-bordered table-hover">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Наименование типа техники</th>
+            <th>Опции</th>
+        </tr>
+    </thead>
+    <tbody></tbody>
+    <tfoot></tfoot>
+</table>
+<br />
+
+@*Разметка диалогов*@
+<div id="dialogAdd" title="Добавление нового типа техники" style="visibility: collapse;">
+    <form>
+        <fieldset>
+            <label for="nameAdd">Наименование типа</label>
+            <input type="text" name="nameAdd" placeholder="Наименование типа" id="nameAdd" class="text ui-widget-content ui-corner-all">
+            <input type="submit" tabindex="-1" style="position:absolute; top:-1000px">
+        </fieldset>
+    </form>
+</div>
+<div id="dialogEdit" style="visibility: collapse;">
+    <form>
+        <fieldset>
+            <label for="nameEdit">Наименование типа</label>
+            <input type="text" name="nameEdit" placeholder="Новое наименование" id="nameEdit" class="text ui-widget-content ui-corner-all">
+            <input type="submit" tabindex="-1" style="position:absolute; top:-1000px">
+        </fieldset>
+    </form>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            var objectEdit,
+                nameAdd = $("#nameAdd"),
+                nameEdit = $("#nameEdit");
+            // Диалог добавления
+            var dialogAdd = $("#dialogAdd").dialog({
+                autoOpen: false,
+                height: 250,
+                width: 500,
+                modal: true,
+                buttons: {
+                    "Добавить": add,
+                    Отмена:
+                        function () {
+                            dialogAdd.dialog("close");
+                        }
+                }
+            });
+            // Диалог редактирования
+            var dialogEdit = $("#dialogEdit").dialog({
+                autoOpen: false,
+                height: 250,
+                width: 500,
+                modal: true,
+                buttons: {
+                    "Редактировать": edit,
+                    Отмена:
+                        function () {
+                            dialogEdit.dialog("close");
+                        }
+                }
+            });
+
+            // Для удобства показа
+            function showDialogAdd() {
+                $("#dialogAdd").css("visibility", "visible");
+                dialogAdd.dialog("open");
+            }
+            function showDialogEdit() {
+                $("#dialogEdit").css("visibility", "visible");
+                dialogEdit.dialog("open");
+            }
+
+            // Назначаем обработчик по клику для кнопки добавления
+            $("#buttonAdd").on("click", function () {
+                showDialogAdd();
+            });
+
+            // DataTable jquery
+            var table = $("#typetechnics").DataTable({
+                rowReorder: true,
+                colReorder: true,
+                ajax: {
+                    url: "../api/typetechnics/",
+                    dataSrc: ""
+                },
+                columns: [
+                    {
+                        data: "id"
+                    },
+                    {
+                        data: "name"
+                    },
+                    {
+                        data: "id",
+                        render: function (data) {
+                            return `<button class='btn btn-sm btn-danger delete-typetechnic' data-typetechnic-id=${data}>
+                                                <span class="glyphicon glyphicon-remove"></span>&nbsp;Удалить
+                                            </button>
+                                            <button class='btn btn-sm btn-primary edit-typetechnic' data-typetechnic-id=${data}>
+                                                <span class="glyphicon glyphicon-edit"></span>&nbsp;Изменить
+                                            </button>`;
+                        }
+                    }
+                ]
+            });
+
+            // Удаление
+            $("#typetechnics").on("click", ".delete-typetechnic",
+                function () {
+                    let button = $(this);
+                    if (confirm(`Вы действительно хотите удалить производителя с ID ${button.attr("data-typetechnic-id")}?`)) {
+                        $.ajax({
+                            url: `../api/typetechnics/${button.attr("data-typetechnic-id")}`,
+                            method: "DELETE",
+                            success:
+                                function () {
+                                    table.row(button.parents("tr")).remove().draw();
+                                },
+                            error:
+                                function (xmlHttpRequest, textStatus, errorThrown) {
+                                    alert(`Ошибка при удалении!\n\nСтатус: ${textStatus}\n\n${errorThrown}`);
+                                }
+                        });
+                    }
+                });
+            // Редактирование
+            $("#typetechnics").on("click", ".edit-typetechnic",
+                function () {
+                    let button = $(this);
+                    $.ajax({
+                        url: `../api/typetechnics/${button.attr("data-typetechnic-id")}`,
+                        method: "GET",
+                        success:
+                            function (typetechnic) {
+                                objectEdit = typetechnic;
+                                nameEdit.val(objectEdit.name);
+                                dialogEdit.dialog('option', 'title', `Редактирование типа техники с ID=${objectEdit.id}`);
+                                showDialogEdit();
+                            },
+                        error:
+                            function (xmlHttpRequest, textStatus, errorThrown) {
+                                alert(`Ошибка при получении объекта!\n\nСтатус: ${textStatus}\n\n${errorThrown}`);
+                            }
+                    });
+                });
+
+            // Функция добавления
+            function add() {
+                let typetechnic = {
+                    id: 0,
+                    name: nameAdd.val()
+                };
+                $.ajax({
+                    contentType: "application/json",
+                    dataType: "json",
+                    data: JSON.stringify(typetechnic),
+                    url: "../api/typetechnics/",
+                    method: "POST",
+                    success:
+                        function () {
+                            table.ajax.reload(null, false);
+                        },
+                    error:
+                        function (xmlHttpRequest, textStatus, errorThrown) {
+                            alert(`Ошибка при добавлении!\n\nСтатус: ${textStatus}\n\n${errorThrown}`);
+                        }
+                });
+                dialogAdd.dialog("close");
+            }
+            // Функция редактирования
+            function edit() {
+                let typetechnic = {
+                    id: objectEdit.id,
+                    name: nameEdit.val()
+                };
+                $.ajax({
+                    contentType: "application/json",
+                    dataType: "json",
+                    data: JSON.stringify(typetechnic),
+                    url: "../api/typetechnics/",
+                    method: "PUT",
+                    success:
+                        function () {
+                            table.ajax.reload(null, false);
+                        },
+                    error:
+                        function (xmlHttpRequest, textStatus, errorThrown) {
+                            alert(`Ошибка при редактировании!\n\nСтатус: ${textStatus}\n\n${errorThrown}`);
+                        }
+                });
+                dialogEdit.dialog("close");
+            }
+
+            // Форма добавления, привязываем действие к сабмиту
+            dialogAdd.find("form").on("submit",
+                function () {
+                    add();
+                }
+            );
+            // Форма редактирования, привязываем действие к сабмиту
+            dialogEdit.find("form").on("submit",
+                function () {
+                    edit();
+                }
+            );
+        });
+    </script>
+}

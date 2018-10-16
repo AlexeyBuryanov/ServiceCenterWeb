@@ -1,0 +1,40 @@
+﻿@model CreateUserViewModel
+
+@{
+    ViewData["Title"] = "Создание пользователя";
+    Layout = "/Views/Shared/_Layout.cshtml";
+}
+
+<br /><br />
+<h2>Создание пользователя</h2>
+<form asp-action="Create"
+      asp-controller="Users"
+      method="post"
+      class="form-horizontal">
+    <div asp-validation-summary="All" class="text-danger"></div>
+    <hr />
+    <div class="form-group">
+        <label asp-for="Email" class="col-md-2 control-label"></label>
+        <div class="col-md-3">
+            <input type="email" asp-for="Email" placeholder="E-mail" class="form-control" />
+            <span asp-validation-for="Email" class="text-danger"></span>
+        </div>
+    </div>
+    <div class="form-group">
+        <label asp-for="Password" class="col-md-2 control-label"></label>
+        <div class="col-md-3">
+            <input type="password" asp-for="Password" placeholder="Пароль" class="form-control" />
+            <span asp-validation-for="Password" class="text-danger"></span>
+        </div>
+    </div>
+    <div class="form-group">
+        <div class="col-md-offset-2 col-md-10">
+            <a class="btn btn-default" asp-action="Users" asp-controller="AdminPanel">
+                <span class="glyphicon glyphicon-eye-close"></span>&nbsp;Отмена
+            </a>
+            <button type="submit" class="btn btn-primary">
+                <span class="glyphicon glyphicon-plus"></span>&nbsp;Создать
+            </button>
+        </div>
+    </div>
+</form>

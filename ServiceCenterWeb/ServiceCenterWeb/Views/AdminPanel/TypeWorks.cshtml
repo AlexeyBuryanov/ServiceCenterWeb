@@ -1,0 +1,233 @@
+﻿@{
+    ViewData["Title"] = "Список типов работ выполняемые мастерами сервисного центра";
+    Layout = "/Views/Shared/_Layout.cshtml";
+}
+
+<br /><br />
+<h2>Список типов работ выполняемые мастерами сервисного центра</h2>
+<br />
+<a asp-area="" asp-controller="AdminPanel" asp-action="Index"
+   title="Панель администратора"
+   class="btn btn-sm btn-primary">
+    <span class="glyphicon glyphicon-arrow-left"></span>&nbsp;Панель администратора
+</a>
+<hr />
+<button id="buttonAdd" class="btn btn-primary btn-sm">
+    <span class="glyphicon glyphicon-plus"></span>&nbsp;Добавить тип работы
+</button>
+<br /><br />
+@*Разметка таблицы*@
+<table id="typeworks" class="table table-bordered table-hover">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Наименование вида работы</th>
+            <th>Опции</th>
+        </tr>
+    </thead>
+    <tbody></tbody>
+    <tfoot></tfoot>
+</table>
+<br />
+
+@*Разметка диалогов*@
+<div id="dialogAdd" title="Добавление нового типа работы" style="visibility: collapse;">
+    <form>
+        <fieldset>
+            <label for="nameAdd">Наименование типа</label>
+            <input type="text" name="nameAdd" placeholder="Наименование типа" id="nameAdd" class="text ui-widget-content ui-corner-all">
+            <input type="submit" tabindex="-1" style="position:absolute; top:-1000px">
+        </fieldset>
+    </form>
+</div>
+<div id="dialogEdit" style="visibility: collapse;">
+    <form>
+        <fieldset>
+            <label for="nameEdit">Наименование типа</label>
+            <input type="text" name="nameEdit" placeholder="Новое наименование" id="nameEdit" class="text ui-widget-content ui-corner-all">
+            <input type="submit" tabindex="-1" style="position:absolute; top:-1000px">
+        </fieldset>
+    </form>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            var objectEdit,
+                nameAdd = $("#nameAdd"),
+                nameEdit = $("#nameEdit");
+            // Диалог добавления
+            var dialogAdd = $("#dialogAdd").dialog({
+                autoOpen: false,
+                height: 250,
+                width: 500,
+                modal: true,
+                buttons: {
+                    "Добавить": add,
+                    Отмена:
+                        function () {
+                            dialogAdd.dialog("close");
+                        }
+                }
+            });
+            // Диалог редактирования
+            var dialogEdit = $("#dialogEdit").dialog({
+                autoOpen: false,
+                height: 250,
+                width: 500,
+                modal: true,
+                buttons: {
+                    "Редактировать": edit,
+                    Отмена:
+                        function () {
+                            dialogEdit.dialog("close");
+                        }
+                }
+            });
+
+            // Для удобства показа
+            function showDialogAdd() {
+                $("#dialogAdd").css("visibility", "visible");
+                dialogAdd.dialog("open");
+            }
+            function showDialogEdit() {
+                $("#dialogEdit").css("visibility", "visible");
+                dialogEdit.dialog("open");
+            }
+
+            // Назначаем обработчик по клику для кнопки добавления
+            $("#buttonAdd").on("click", function () {
+                showDialogAdd();
+            });
+
+            // DataTable jquery
+            var table = $("#typeworks").DataTable({
+                rowReorder: true,
+                colReorder: true,
+                ajax: {
+                    url: "../api/typeworks/",
+                    dataSrc: ""
+                },
+                columns: [
+                    {
+                        data: "id"
+                    },
+                    {
+                        data: "name"
+                    },
+                    {
+                        data: "id",
+                        render: function (data) {
+                            return `<button class='btn btn-sm btn-danger delete-typework' data-typework-id=${data}>
+                                                <span class="glyphicon glyphicon-remove"></span>&nbsp;Удалить
+                                            </button>
+                                            <button class='btn btn-sm btn-primary edit-typework' data-typework-id=${data}>
+                                                <span class="glyphicon glyphicon-edit"></span>&nbsp;Изменить
+                                            </button>`;
+                        }
+                    }
+                ]
+            });
+
+            // Удаление
+            $("#typeworks").on("click", ".delete-typework",
+                function () {
+                    let button = $(this);
+                    if (confirm(`Вы действительно хотите удалить производителя с ID ${button.attr("data-typework-id")}?`)) {
+                        $.ajax({
+                            url: `../api/typeworks/${button.attr("data-typework-id")}`,
+                            method: "DELETE",
+                            success:
+                                function () {
+                                    table.row(button.parents("tr")).remove().draw();
+                                },
+                            error:
+                                function (xmlHttpRequest, textStatus, errorThrown) {
+                                    alert(`Ошибка при удалении!\n\nСтатус: ${textStatus}\n\n${errorThrown}`);
+                                }
+                        });
+                    }
+                });
+            // Редактирование
+            $("#typeworks").on("click", ".edit-typework",
+                function () {
+                    let button = $(this);
+                    $.ajax({
+                        url: `../api/typeworks/${button.attr("data-typework-id")}`,
+                        method: "GET",
+                        success:
+                            function (typework) {
+                                objectEdit = typework;
+                                nameEdit.val(objectEdit.name);
+                                dialogEdit.dialog('option', 'title', `Редактирование вида работы с ID=${objectEdit.id}`);
+                                showDialogEdit();
+                            },
+                        error:
+                            function (xmlHttpRequest, textStatus, errorThrown) {
+                                alert(`Ошибка при получении объекта!\n\nСтатус: ${textStatus}\n\n${errorThrown}`);
+                            }
+                    });
+                });
+
+            // Функция добавления
+            function add() {
+                let typework = {
+                    id: 0,
+                    name: nameAdd.val()
+                };
+                $.ajax({
+                    contentType: "application/json",
+                    dataType: "json",
+                    data: JSON.stringify(typework),
+                    url: "../api/typeworks/",
+                    method: "POST",
+                    success:
+                        function () {
+                            table.ajax.reload(null, false);
+                        },
+                    error:
+                        function (xmlHttpRequest, textStatus, errorThrown) {
+                            alert(`Ошибка при добавлении!\n\nСтатус: ${textStatus}\n\n${errorThrown}`);
+                        }
+                });
+                dialogAdd.dialog("close");
+            }
+            // Функция редактирования
+            function edit() {
+                let typework = {
+                    id: objectEdit.id,
+                    name: nameEdit.val()
+                };
+                $.ajax({
+                    contentType: "application/json",
+                    dataType: "json",
+                    data: JSON.stringify(typework),
+                    url: "../api/typeworks/",
+                    method: "PUT",
+                    success:
+                        function () {
+                            table.ajax.reload(null, false);
+                        },
+                    error:
+                        function (xmlHttpRequest, textStatus, errorThrown) {
+                            alert(`Ошибка при редактировании!\n\nСтатус: ${textStatus}\n\n${errorThrown}`);
+                        }
+                });
+                dialogEdit.dialog("close");
+            }
+
+            // Форма добавления, привязываем действие к сабмиту
+            dialogAdd.find("form").on("submit",
+                function () {
+                    add();
+                }
+            );
+            // Форма редактирования, привязываем действие к сабмиту
+            dialogEdit.find("form").on("submit",
+                function () {
+                    edit();
+                }
+            );
+        });
+    </script>
+}

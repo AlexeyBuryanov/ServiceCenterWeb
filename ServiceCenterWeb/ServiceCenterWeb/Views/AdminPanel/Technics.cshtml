@@ -1,0 +1,358 @@
+﻿@{
+    ViewData["Title"] = "Техника, которую поддерживает сервисный центр";
+    Layout = "/Views/Shared/_Layout.cshtml";
+}
+
+<br /><br />
+<h2>Список техники поддерживаемой сервисным центром</h2>
+<br />
+<a asp-area="" asp-controller="AdminPanel" asp-action="Index"
+   title="Панель администратора"
+   class="btn btn-sm btn-primary">
+    <span class="glyphicon glyphicon-arrow-left"></span>&nbsp;Панель администратора
+</a>
+<hr />
+<button id="buttonAdd" class="btn btn-primary btn-sm">
+    <span class="glyphicon glyphicon-plus"></span>&nbsp;Добавить технику
+</button>
+<br /><br />
+@*Разметка таблицы*@
+<table id="technics" class="table table-bordered table-hover">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Наименование</th>
+            <th>Тип техники</th>
+            <th>Производитель</th>
+            <th>Опции</th>
+        </tr>
+    </thead>
+    <tbody></tbody>
+    <tfoot></tfoot>
+</table>
+<br />
+
+@*Разметка диалогов*@
+<div id="dialogAdd" title="Добавление новой техники" style="visibility: collapse;">
+    <form>
+        <fieldset>
+            <label for="nameAdd">Название</label>
+            <input type="text" name="nameAdd" placeholder="Название" id="nameAdd" class="text ui-widget-content ui-corner-all">
+            <label for="typeTechnicAdd">Тип техники</label>
+            <select style="height: 30px;" name="typeTechnicAdd" id="typeTechnicAdd" class="ui-widget-content ui-corner-all">
+                <option selected disabled value="Загрузка ...">Загрузка ...</option>
+            </select><br /><br />
+            <label for="manufacturerAdd">Производитель</label>
+            <select style="height: 30px;" name="manufacturerAdd" id="manufacturerAdd" class="ui-widget-content ui-corner-all">
+                <option selected disabled value="Загрузка ...">Загрузка ...</option>
+            </select>
+            <input type="submit" tabindex="-1" style="position:absolute; top:-1000px">
+        </fieldset>
+    </form>
+</div>
+<div id="dialogEdit" style="visibility: collapse;">
+    <form>
+        <fieldset>
+            <label for="nameEdit">Название</label>
+            <input type="text" name="nameEdit" placeholder="Название" id="nameEdit" class="text ui-widget-content ui-corner-all">
+            <label for="typeTechnicEdit">Тип техники</label>
+            <select style="height: 30px;" name="typeTechnicEdit" id="typeTechnicEdit" class="ui-widget-content ui-corner-all">
+                <option selected disabled value="Загрузка ...">Загрузка ...</option>
+            </select><br /><br />
+            <label for="manufacturerEdit">Производитель</label>
+            <select style="height: 30px;" name="manufacturerEdit" id="manufacturerEdit" class="ui-widget-content ui-corner-all">
+                <option selected disabled value="Загрузка ...">Загрузка ...</option>
+            </select>
+            <input type="submit" tabindex="-1" style="position:absolute; top:-1000px">
+        </fieldset>
+    </form>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            var objectEdit,
+                nameAdd = $("#nameAdd"),
+                typeTechnicAdd = $("#typeTechnicAdd"),
+                manufacturerAdd = $("#manufacturerAdd"),
+                nameEdit = $("#nameEdit"),
+                typeTechnicEdit = $("#typeTechnicEdit"),
+                manufacturerEdit = $("#manufacturerEdit");
+
+            // Заполняем комбо-боксы значениями из базы с помощью AJAX и WebAPI
+            function fillSelects() {
+                $.ajax({
+                    url: '../api/typetechnics',
+                    method: "GET",
+                    success:
+                        function (typetechnics) {
+                            typeTechnicAdd.find("option")
+                                .remove()
+                                .end();
+                            typeTechnicEdit.find("option")
+                                .remove()
+                                .end();
+                            typetechnics.forEach(function (item) {
+                                typeTechnicAdd.find("option")
+                                    .end()
+                                    .append(`<option value="${item.id}">${item.name}</option>`);
+                                typeTechnicEdit.find("option")
+                                    .end()
+                                    .append(`<option value="${item.id}">${item.name}</option>`);
+                            });
+                        },
+                    error:
+                        function (xmlHttpRequest, textStatus, errorThrown) {
+                            alert(`Ошибка при получении объекта типа техники для комбо-бокса!\n\nСтатус: ${textStatus}\n\n${
+                                errorThrown}`);
+                        }
+                });
+                $.ajax({
+                    url: '../api/manufacturers',
+                    method: "GET",
+                    success:
+                        function (manufacturers) {
+                            manufacturerAdd.find("option")
+                                .remove()
+                                .end();
+                            manufacturerEdit.find("option")
+                                .remove()
+                                .end();
+                            manufacturers.forEach(function (item) {
+                                manufacturerAdd.find("option")
+                                    .end()
+                                    .append(`<option value="${item.id}">${item.name}</option>`);
+                                manufacturerEdit.find("option")
+                                    .end()
+                                    .append(`<option value="${item.id}">${item.name}</option>`);
+                            });
+                        },
+                    error:
+                        function (xmlHttpRequest, textStatus, errorThrown) {
+                            alert(`Ошибка при получении объекта производителей для комбо-бокса!\n\nСтатус: ${textStatus
+                                }\n\n${errorThrown}`);
+                        }
+                });
+            } // fillSelects
+            fillSelects();
+
+            // Диалог добавления
+            var dialogAdd = $("#dialogAdd").dialog({
+                autoOpen: false,
+                height: 380,
+                width: 500,
+                modal: true,
+                buttons: {
+                    "Добавить": add,
+                    Отмена:
+                        function () {
+                            dialogAdd.dialog("close");
+                        }
+                }
+            });
+            // Диалог редактирования
+            var dialogEdit = $("#dialogEdit").dialog({
+                autoOpen: false,
+                height: 380,
+                width: 500,
+                modal: true,
+                buttons: {
+                    "Редактировать": edit,
+                    Отмена:
+                        function () {
+                            dialogEdit.dialog("close");
+                        }
+                }
+            });
+
+            // Для удобства показа
+            function showDialogAdd() {
+                $("#dialogAdd").css("visibility", "visible");
+                dialogAdd.dialog("open");
+            }
+            function showDialogEdit() {
+                $("#dialogEdit").css("visibility", "visible");
+                dialogEdit.dialog("open");
+            }
+
+            // Для выбора значения в комбо-боксе
+            function setSelectedValue(selectObj, valueToSet) {
+                for (let i = 0; i < selectObj.options.length; i++) {
+                    if (selectObj.options[i].value == valueToSet) {
+                        selectObj.options[i].selected = true;
+                        return;
+                    } // if
+                } // for i
+            }
+
+            // Назначаем обработчик по клику для кнопки добавления
+            $("#buttonAdd").on("click",
+                function () {
+                    showDialogAdd();
+                });
+
+            // DataTable jquery
+            var table = $("#technics").DataTable({
+                rowReorder: true,
+                colReorder: true,
+                ajax: {
+                    url: "../api/technics/",
+                    dataSrc: ""
+                },
+                columns: [
+                    {
+                        data: "id"
+                    },
+                    {
+                        data: "name"
+                    },
+                    {
+                        data: "typeTechnic.name"
+                    },
+                    {
+                        data: "manufacturer.name"
+                    },
+                    {
+                        data: "id",
+                        render: function (data) {
+                            return `<button class='btn btn-sm btn-danger delete-technic' data-technic-id=${data}>
+                                                <span class="glyphicon glyphicon-remove"></span>&nbsp;Удалить
+                                            </button>
+                                            <button class='btn btn-sm btn-primary edit-technic' data-technic-id=${data}>
+                                                <span class="glyphicon glyphicon-edit"></span>&nbsp;Изменить
+                                            </button>`;
+                        }
+                    }
+                ]
+            });
+
+            // Удаление
+            $("#technics").on("click",
+                ".delete-technic",
+                function () {
+                    let button = $(this);
+                    if (confirm(`Вы действительно хотите удалить технику с ID ${button.attr("data-technic-id")}?`)) {
+                        $.ajax({
+                            url: `../api/technics/${button.attr("data-technic-id")}`,
+                            method: "DELETE",
+                            success:
+                                function () {
+                                    table.row(button.parents("tr")).remove().draw();
+                                },
+                            error:
+                                function (xmlHttpRequest, textStatus, errorThrown) {
+                                    alert(`Ошибка при удалении!\n\nСтатус: ${textStatus}\n\n${errorThrown}`);
+                                }
+                        });
+                    }
+                });
+            // Редактирование
+            $("#technics").on("click",
+                ".edit-technic",
+                function () {
+                    let button = $(this);
+                    $.ajax({
+                        url: `../api/technics/${button.attr("data-technic-id")}`,
+                        method: "GET",
+                        success:
+                            function (technic) {
+                                objectEdit = technic;
+
+                                nameEdit.val(objectEdit.name);
+                                setSelectedValue(document.getElementById("typeTechnicEdit"), objectEdit.typeTechnicId);
+                                setSelectedValue(document.getElementById("manufacturerEdit"), objectEdit.manufacturerId);
+
+                                dialogEdit.dialog('option', 'title', `Редактирование техники с ID=${objectEdit.id}`);
+                                showDialogEdit();
+                            },
+                        error:
+                            function (xmlHttpRequest, textStatus, errorThrown) {
+                                alert(`Ошибка при получении объекта!\n\nСтатус: ${textStatus}\n\n${errorThrown}`);
+                            }
+                    });
+                });
+
+            // Функция добавления
+            function add() {
+                let technic = {
+                    id: 0,
+                    name: nameAdd.val(),
+                    typeTechnicId: $("#typeTechnicAdd option:selected").attr("value"),
+                    typeTechnic: {
+                        id: 0,
+                        name: $("#typeTechnicAdd option:selected").text()
+                    },
+                    manufacturerId: $("#manufacturerAdd option:selected").attr("value"),
+                    manufacturer: {
+                        id: 0,
+                        name: $("#manufacturerAdd option:selected").text()
+                    }
+                };
+                $.ajax({
+                    contentType: "application/json",
+                    dataType: "json",
+                    data: JSON.stringify(technic),
+                    url: "../api/technics/",
+                    method: "POST",
+                    success:
+                        function () {
+                            table.ajax.reload(null, false);
+                            fillSelects();
+                        },
+                    error:
+                        function (xmlHttpRequest, textStatus, errorThrown) {
+                            alert(`Ошибка при добавлении!\n\nСтатус: ${textStatus}\n\n${errorThrown}\n\n${xmlHttpRequest.responseText}`);
+                        }
+                });
+                dialogAdd.dialog("close");
+            }
+
+            // Функция редактирования
+            function edit() {
+                let technic = {
+                    id: objectEdit.id,
+                    name: nameEdit.val(),
+                    typeTechnicId: $("#typeTechnicEdit option:selected").attr("value"),
+                    typeTechnic: {
+                        id: 0,
+                        name: $("#typeTechnicEdit option:selected").text()
+                    },
+                    manufacturerId: $("#manufacturerEdit option:selected").attr("value"),
+                    manufacturer: {
+                        id: 0,
+                        name: $("#manufacturerEdit option:selected").text()
+                    }
+                };
+                $.ajax({
+                    contentType: "application/json",
+                    dataType: "json",
+                    data: JSON.stringify(technic),
+                    url: "../api/technics/",
+                    method: "PUT",
+                    success:
+                        function () {
+                            table.ajax.reload(null, false);
+                        },
+                    error:
+                        function (xmlHttpRequest, textStatus, errorThrown) {
+                            alert(`Ошибка при редактировании!\n\nСтатус: ${textStatus}\n\n${errorThrown}`);
+                        }
+                });
+                dialogEdit.dialog("close");
+            }
+
+            // Форма добавления, привязываем действие к сабмиту
+            dialogAdd.find("form").on("submit",
+                function () {
+                    add();
+                }
+            );
+            // Форма редактирования, привязываем действие к сабмиту
+            dialogEdit.find("form").on("submit",
+                function () {
+                    edit();
+                }
+            );
+        });
+    </script>
+}

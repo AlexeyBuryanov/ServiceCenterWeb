@@ -1,0 +1,71 @@
+﻿@{
+    ViewBag.Title = "Панель администратора";
+    Layout = "/Views/Shared/_Layout.cshtml";
+}
+
+<div align="center">
+    <h2>Добро пожаловать!<br/> Начните управление сервисным центром прямо сейчас!</h2>
+    <hr />
+    <div class="row">
+        <a class="btn btn-lg btn-primary"
+           asp-area=""
+           asp-controller="AdminPanel"
+           asp-action="Users">
+            <i class="fa fa-users fa-4x" aria-hidden="true"></i><br /> Пользователи
+        </a>
+        <a class="btn btn-lg btn-primary"
+           asp-area=""
+           asp-controller="AdminPanel"
+           asp-action="Roles">
+            <i class="fa fa-users-cog fa-4x" aria-hidden="true"></i><br /> Роли
+        </a>
+    </div><br />
+    <div class="row">
+        <a class="btn btn-lg btn-primary"
+           asp-area=""
+           asp-controller="AdminPanel"
+           asp-action="Masters">
+            <i class="fa fa-screwdriver fa-4x" aria-hidden="true"></i><br /> Мастера
+        </a>
+        <a class="btn btn-lg btn-primary"
+           asp-area=""
+           asp-controller="AdminPanel"
+           asp-action="Clients">
+            <i class="fa fa-address-card fa-4x" aria-hidden="true"></i><br /> Клиенты
+        </a>
+    </div><br />
+    <div class="row">
+        <a class="btn btn-lg btn-primary"
+           asp-area=""
+           asp-controller="AdminPanel"
+           asp-action="Manufacturers">
+            <i class="fa fa-plug fa-4x" aria-hidden="true"></i><br /> Производители
+        </a>
+        <a class="btn btn-lg btn-primary"
+           asp-area=""
+           asp-controller="AdminPanel"
+           asp-action="TypeTechnics">
+            <i class="fa fa-desktop fa-4x" aria-hidden="true"></i><br /> Типы техники
+        </a>
+        <a class="btn btn-lg btn-primary"
+           asp-area=""
+           asp-controller="AdminPanel"
+           asp-action="TypeWorks">
+            <i class="fa fa-briefcase fa-4x" aria-hidden="true"></i><br /> Типы работ
+        </a>
+    </div><br/>
+    <div class="row">
+        <a class="btn btn-lg btn-primary"
+           asp-area=""
+           asp-controller="AdminPanel"
+           asp-action="Technics">
+            <i class="fa fa-tv fa-4x" aria-hidden="true"></i><br /> Техника
+        </a>
+        <a class="btn btn-lg btn-primary"
+           asp-area=""
+           asp-controller="AdminPanel"
+           asp-action="Orders">
+            <i class="fa fa-people-carry fa-4x" aria-hidden="true"></i><br /> Заказы
+        </a>
+    </div>
+</div>

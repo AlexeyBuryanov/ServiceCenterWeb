@@ -1,0 +1,801 @@
+﻿@model PersonalCabinetViewModel
+
+@inject SignInManager<User> SignInManager
+
+@{
+    ViewData["Title"] = "Личный кабинет";
+    Layout = "/Views/Shared/_Layout.cshtml";
+}
+
+@if (SignInManager.IsSignedIn(User)) {
+    // Для клиента
+    if (User.IsInRole("Клиент")) {
+        <br /><br />
+        <h2>Личные данные клиента</h2>
+        <hr />
+        <div class="form-horizontal">
+            <div class="form-group">
+                <div class="col-md-2 control-label"></div>
+                <div class="col-md-3">
+                    <a href="@Model.CurrentUser.AvatarPath" target="_blank">
+                        <img src="@Model.CurrentUser.AvatarPath"
+                             style="width: auto; height: auto; max-height: 250px; max-width: 250px;"
+                             alt="@Model.CurrentUser.UserName-avatar" />
+                    </a>
+                    <form asp-area=""
+                          asp-action="ChangeAvatar"
+                          asp-controller="PersonalCabinet"
+                          method="post"
+                          enctype="multipart/form-data"
+                          id="uploadAvatarForm">
+                        <input type="file" name="uploadedFile" class="input" />
+                    </form>
+                </div>
+            </div>
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="form-group">
+                <label asp-for="CurrentClient.FirstName" class="col-md-2 control-label">Имя</label>
+                <div class="col-md-3">
+                    <input type="text" name="firstName" value="@Model.CurrentClient.FirstName" placeholder="Имя" id="firstName" class="form-control">
+                    <span asp-validation-for="CurrentClient.FirstName" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="form-group">
+                <label asp-for="CurrentClient.LastName" class="col-md-2 control-label">Фамилия</label>
+                <div class="col-md-3">
+                    <input type="text" name="lastName" value="@Model.CurrentClient.LastName" placeholder="Фамилия" id="lastName" class="form-control">
+                    <span asp-validation-for="CurrentClient.LastName" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="form-group">
+                <label asp-for="CurrentClient.MobilePhone" class="col-md-2 control-label">Телефон</label>
+                <div class="col-md-3">
+                    <input type="text" name="mobilePhone" value="@Model.CurrentClient.MobilePhone" placeholder="Мобильный" id="mobilePhone" class="form-control">
+                    <span asp-validation-for="CurrentClient.MobilePhone" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="form-group">
+                <label asp-for="CurrentClient.Reputation" class="col-md-2 control-label">Репутация</label>
+                <div class="col-md-3">
+                    <input disabled type="text" name="reputation" value="@Model.CurrentClient.Reputation" placeholder="Репутация" id="reputation" class="form-control">
+                    <span asp-validation-for="CurrentClient.Reputation" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-md-offset-2 col-md-10">
+                    <button id="buttonSavePrivateData" type="button" class="btn btn-primary">
+                        <span class="glyphicon glyphicon-save"></span>&nbsp;Сохранить
+                    </button><br />
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-md-2 control-label"></div>
+                <div class="col-md-3">
+                    <p id="message" class="text-uppercase label label-success"></p>
+                </div>
+            </div>
+            <br />
+        </div>
+
+        <div>
+            <h2>Список заказов</h2>
+            <hr />
+            <button id="buttonAdd" class="btn btn-primary btn-sm">
+                <span class="glyphicon glyphicon-plus"></span>&nbsp;Добавить заказ
+            </button>
+            <br /><br />
+            @*Разметка таблицы*@
+            <table id="personalorders" class="table table-bordered table-hover">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Техника</th>
+                        <th>Мастер</th>
+                        <th>Вид работы</th>
+                        <th>Время заказа</th>
+                        <th>Статус</th>
+                        <th>Опции</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+                <tfoot></tfoot>
+            </table>
+            <br />
+        </div>
+
+        @*Разметка диалогов*@
+        <div id="dialogAdd" title="Добавление нового заказа" style="visibility: collapse;">
+            <form>
+                <fieldset>
+                    <label for="technicAdd">Техника</label>
+                    <select style="height: 30px;" name="technicAdd" id="technicAdd" class="ui-widget-content ui-corner-all">
+                        <option selected disabled value="Загрузка ...">Загрузка ...</option>
+                    </select><br /><br />
+                    <label for="masterAdd">Мастер по ремонту</label>
+                    <select style="height: 30px;" name="masterAdd" id="masterAdd" class="ui-widget-content ui-corner-all">
+                        <option selected disabled value="Загрузка ...">Загрузка ...</option>
+                    </select><br /><br />
+                    <label for="typeWorkAdd">Вид работы</label>
+                    <select style="height: 30px;" name="typeWorkAdd" id="typeWorkAdd" class="ui-widget-content ui-corner-all">
+                        <option selected disabled value="Загрузка ...">Загрузка ...</option>
+                    </select><br /><br />
+                    <input type="submit" tabindex="-1" style="position: absolute; top: -1000px">
+                </fieldset>
+            </form>
+        </div>
+        <div id="dialogEdit" style="visibility: collapse;">
+            <form>
+                <fieldset>
+                    <label for="technicEdit">Техника</label>
+                    <select style="height: 30px;" name="technicEdit" id="technicEdit" class="ui-widget-content ui-corner-all">
+                        <option selected disabled value="Загрузка ...">Загрузка ...</option>
+                    </select><br /><br />
+                    <label for="masterEdit">Мастер по ремонту</label>
+                    <select style="height: 30px;" name="masterEdit" id="masterEdit" class="ui-widget-content ui-corner-all">
+                        <option selected disabled value="Загрузка ...">Загрузка ...</option>
+                    </select><br /><br />
+                    <label for="typeWorkEdit">Вид работы</label>
+                    <select style="height: 30px;" name="typeWorkEdit" id="typeWorkEdit" class="ui-widget-content ui-corner-all">
+                        <option selected disabled value="Загрузка ...">Загрузка ...</option>
+                    </select><br /><br />
+                    <input type="submit" tabindex="-1" style="position:absolute; top:-1000px">
+                </fieldset>
+            </form>
+        </div>
+
+        @section Scripts {
+            <script>
+                $(document).ready(function () {
+                    var objectEdit,
+                        technicAdd = $("#technicAdd"),
+                        masterAdd = $("#masterAdd"),
+                        typeWorkAdd = $("#typeWorkAdd"),
+                        technicEdit = $("#technicEdit"),
+                        masterEdit = $("#masterEdit"),
+                        typeWorkEdit = $("#typeWorkEdit");
+
+                    // Заполняем комбо-боксы значениями из базы с помощью AJAX и WebAPI
+                    function fillSelects() {
+                        $.ajax({
+                            url: '/api/technics',
+                            method: "GET",
+                            success:
+                                function(technics) {
+                                    technicAdd.find("option")
+                                        .remove()
+                                        .end();
+                                    technicEdit.find("option")
+                                        .remove()
+                                        .end();
+                                    technics.forEach(function(item) {
+                                        technicAdd.find("option")
+                                            .end()
+                                            .append(`<option value="${item.id}">${item.name}</option>`);
+                                        technicEdit.find("option")
+                                            .end()
+                                            .append(`<option value="${item.id}">${item.name}</option>`);
+                                    });
+                                },
+                            error:
+                                function(xmlHttpRequest, textStatus, errorThrown) {
+                                    alert(`Ошибка при получении объекта техники для комбо-бокса!\n\nСтатус: ${textStatus}\n\n${errorThrown}`);
+                                }
+                        });
+                        $.ajax({
+                            url: '/api/masters',
+                            method: "GET",
+                            success:
+                                function(masters) {
+                                    masterAdd.find("option")
+                                        .remove()
+                                        .end();
+                                    masterEdit.find("option")
+                                        .remove()
+                                        .end();
+                                    masters.forEach(function(item) {
+                                        masterAdd.find("option")
+                                            .end()
+                                            .append(`<option value="${item.id}">${item.lastName}</option>`);
+                                        masterEdit.find("option")
+                                            .end()
+                                            .append(`<option value="${item.id}">${item.lastName}</option>`);
+                                    });
+                                },
+                            error:
+                                function(xmlHttpRequest, textStatus, errorThrown) {
+                                    alert(`Ошибка при получении объекта мастеров для комбо-бокса!\n\nСтатус: ${textStatus}\n\n${errorThrown}\n\n${xmlHttpRequest.responseText}`);
+                                }
+                        });
+                        $.ajax({
+                            url: '/api/typeworks',
+                            method: "GET",
+                            success:
+                                function(typeworks) {
+                                    typeWorkAdd.find("option")
+                                        .remove()
+                                        .end();
+                                    typeWorkEdit.find("option")
+                                        .remove()
+                                        .end();
+                                    typeworks.forEach(function(item) {
+                                        typeWorkAdd.find("option")
+                                            .end()
+                                            .append(`<option value="${item.id}">${item.name}</option>`);
+                                        typeWorkEdit.find("option")
+                                            .end()
+                                            .append(`<option value="${item.id}">${item.name}</option>`);
+                                    });
+                                },
+                            error:
+                                function(xmlHttpRequest, textStatus, errorThrown) {
+                                    alert(`Ошибка при получении объекта техники для комбо-бокса!\n\nСтатус: ${textStatus}\n\n${errorThrown}`);
+                                }
+                        });
+                    } // fillSelects
+                    fillSelects();
+
+                    // Диалог добавления
+                    var dialogAdd = $("#dialogAdd").dialog({
+                        autoOpen: false,
+                        height: 430,
+                        width: 500,
+                        modal: true,
+                        buttons: {
+                            "Добавить": add,
+                            Отмена:
+                                function() {
+                                    dialogAdd.dialog("close");
+                                }
+                        }
+                    });
+                    // Диалог редактирования
+                    var dialogEdit = $("#dialogEdit").dialog({
+                        autoOpen: false,
+                        height: 430,
+                        width: 500,
+                        modal: true,
+                        buttons: {
+                            "Редактировать": edit,
+                            Отмена:
+                                function() {
+                                    dialogEdit.dialog("close");
+                                }
+                        }
+                    });
+
+                    // Для удобства показа
+                    function showDialogAdd() {
+                        $("#dialogAdd").css("visibility", "visible");
+                        dialogAdd.dialog("open");
+                    }
+                    function showDialogEdit() {
+                        $("#dialogEdit").css("visibility", "visible");
+                        dialogEdit.dialog("open");
+                    }
+
+                    // Для выбора значения в комбо-боксе
+                    function setSelectedValue(selectObj, valueToSet) {
+                        for (let i = 0; i < selectObj.options.length; i++) {
+                            if (selectObj.options[i].value == valueToSet) {
+                                selectObj.options[i].selected = true;
+                                return;
+                            } // if
+                        } // for i
+                    }
+
+                    // Назначаем обработчик по клику для кнопки добавления
+                    $("#buttonAdd").on("click",
+                        function() {
+                            showDialogAdd();
+                        });
+
+                    // DataTable jquery
+                    var table = $("#personalorders").DataTable({
+                        rowReorder: true,
+                        colReorder: true,
+                        ajax: {
+                            url: "/api/personal/orders/@Model.CurrentUser.Id",
+                            dataSrc: ""
+                        },
+                        columns: [
+                            {
+                                data: "id"
+                            },
+                            {
+                                data: "technic.name"
+                            },
+                            {
+                                data: "master.lastName"
+                            },
+                            {
+                                data: "typeWork.name"
+                            },
+                            {
+                                data: "orderDate",
+                                render: function(data, type, row) {
+                                    let dateSplit = data.split('-');
+                                    let timeSplit = data.split(':');
+                                    return type === "display" || type === "filter"
+                                        ? `${dateSplit[2].substring(0, 2)}.${dateSplit[1]}.${dateSplit[0]}
+                                            ${timeSplit[0].substring(timeSplit[0].length - 2, timeSplit[0].length)}:${timeSplit[1]}:${timeSplit[2]}`
+                                        : data;
+                                }
+                            },
+                            {
+                                data: "isCompleted",
+                                render: function(data, type, row) {
+                                    if (data) {
+                                        return "Выполнен";
+                                    } else {
+                                        return "Работаем";
+                                    } // if
+                                }
+                            },
+                            {
+                                data: "id",
+                                render: function(data) {
+                                    return `<button class='btn btn-sm btn-danger delete-order' data-order-id=${data}>
+                                                <span class="glyphicon glyphicon-remove"></span>&nbsp;Удалить
+                                            </button>
+                                            <button class='btn btn-sm btn-primary edit-order' data-order-id=${data}>
+                                                <span class="glyphicon glyphicon-edit"></span>&nbsp;Изменить
+                                            </button>`;
+                                }
+                            }
+                        ]
+                    });
+
+                    // Обработчик для сохранения личных данных клиента
+                    $("#buttonSavePrivateData").on("click",
+                        function () {
+                            let client = {
+                                id: @Model.CurrentClient.Id,
+                                firstName: $("#firstName").val(),
+                                lastName: $("#lastName").val(),
+                                mobilePhone: $("#mobilePhone").val(),
+                                reputation: @Model.CurrentClient.Reputation,
+                                guid: "@Model.CurrentClient.Guid"
+                            };
+                            $("#buttonSavePrivateData").prop('disabled', true);
+                            $.ajax({
+                                contentType: "application/json",
+                                dataType: "json",
+                                data: JSON.stringify(client),
+                                url: "../api/clients/",
+                                method: "PUT",
+                                success:
+                                    function () {
+                                        $("#message").text("Успешно! Страница будет перезагружена.");
+                                        let timerId = setTimeout(() => {
+                                            $("#message").text("");
+                                            $("#buttonSavePrivateData").prop('disabled', false);
+                                            $("#uploadAvatarForm").submit();
+                                        }, 2000);
+                                    },
+                                error:
+                                    function (xmlHttpRequest, textStatus, errorThrown) {
+                                        alert(`Ошибка при сохранении личных данных!\n\nСтатус: ${textStatus}\n\n${errorThrown}\n\n${xmlHttpRequest
+                                            .responseText}`);
+                                    }
+                            });
+                        });
+
+                    // Удаление
+                    $("#personalorders").on("click",
+                        ".delete-order",
+                        function() {
+                            let button = $(this);
+                            if (confirm(`Вы действительно хотите удалить технику с ID ${button.attr("data-order-id")}?`)) {
+                                $.ajax({
+                                    url: `/api/personal/orders/${button.attr("data-order-id")}`,
+                                    method: "DELETE",
+                                    success:
+                                        function() {
+                                            table.row(button.parents("tr")).remove().draw();
+                                        },
+                                    error:
+                                        function(xmlHttpRequest, textStatus, errorThrown) {
+                                            alert(`Ошибка при удалении!\n\nСтатус: ${textStatus}\n\n${errorThrown}`);
+                                        }
+                                });
+                            }
+                        });
+                    // Редактирование
+                    $("#personalorders").on("click",
+                        ".edit-order",
+                        function() {
+                            let button = $(this);
+                            $.ajax({
+                                url: `api/personal/orders/forid/${button.attr("data-order-id")}`,
+                                method: "GET",
+                                success:
+                                    function(order) {
+                                        objectEdit = order;
+
+                                        setSelectedValue(document.getElementById("technicEdit"), objectEdit.technicId);
+                                        setSelectedValue(document.getElementById("masterEdit"), objectEdit.masterId);
+                                        setSelectedValue(document.getElementById("typeWorkEdit"), objectEdit.typeWorkId);
+
+                                        dialogEdit.dialog('option', 'title', `Редактирование заказа с ID=${objectEdit.id}`);
+                                        showDialogEdit();
+                                    },
+                                error:
+                                    function(xmlHttpRequest, textStatus, errorThrown) {
+                                        alert(`Ошибка при получении объекта!\n\nСтатус: ${textStatus}\n\n${errorThrown}`);
+                                    }
+                            });
+                        });
+
+                    // Функция добавления
+                    function add() {
+                        let d = new Date();
+                        let date = `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${d.getMinutes()}:${d.getSeconds()}`;
+                        let order = {
+                            id: 0,
+                            clientId: 0,
+                            client: {
+                                id: 0,
+                                firstName: "asd",
+                                lastName: "asd",
+                                mobilePhone: "asd",
+                                reputation: 0,
+                                guid: "@Model.CurrentUser.Id"
+                            },
+                            technicId: $("#technicAdd option:selected").attr("value"),
+                            technic: {
+                                id: 0,
+                                name: $("#technicAdd option:selected").text(),
+                                typeTechnic: {
+                                    id: 0,
+                                    name: "asd"
+                                },
+                                manufacturer: {
+                                    id: 0,
+                                    name: "asd"
+                                }
+                            },
+                            masterId: $("#masterAdd option:selected").attr("value"),
+                            master: {
+                                id: 0,
+                                firstName: "asd",
+                                lastName: $("#masterAdd option:selected").text(),
+                                mobilePhone: "asd",
+                                reputation: 0
+                            },
+                            typeWorkId: $("#typeWorkAdd option:selected").attr("value"),
+                            typeWork: {
+                                id: 0,
+                                name: $("#typeWorkAdd option:selected").text()
+                            },
+                            orderDate: date,
+                            isCompleted: 0
+                        };
+                        $.ajax({
+                            contentType: "application/json",
+                            dataType: "json",
+                            data: JSON.stringify(order),
+                            url: "/api/personal/orders/",
+                            method: "POST",
+                            success:
+                                function() {
+                                    table.ajax.reload(null, false);
+                                    fillSelects();
+                                },
+                            error:
+                                function(xmlHttpRequest, textStatus, errorThrown) {
+                                    alert(`Ошибка при добавлении!\n\nСтатус: ${textStatus}\n\n${errorThrown}\n\n${xmlHttpRequest.responseText}`);
+                                }
+                        });
+                        dialogAdd.dialog("close");
+                    }
+
+                    // Функция редактирования
+                    function edit() {
+                        let d = new Date();
+                        let date = `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${d.getMinutes()}:${d.getSeconds()}`;
+                        let order = {
+                            id: objectEdit.id,
+                            clientId: 0,
+                            client: {
+                                id: 0,
+                                firstName: "asd",
+                                lastName: "asd",
+                                mobilePhone: "asd",
+                                reputation: 0,
+                                guid: "@Model.CurrentUser.Id"
+                            },
+                            technicId: $("#technicEdit option:selected").attr("value"),
+                            technic: {
+                                id: 0,
+                                name: $("#technicEdit option:selected").text(),
+                                typeTechnic: {
+                                    id: 0,
+                                    name: "asd"
+                                },
+                                manufacturer: {
+                                    id: 0,
+                                    name: "asd"
+                                }
+                            },
+                            masterId: $("#masterEdit option:selected").attr("value"),
+                            master: {
+                                id: 0,
+                                firstName: "asd",
+                                lastName: $("#masterEdit option:selected").text(),
+                                mobilePhone: "asd",
+                                reputation: 0
+                            },
+                            typeWorkId: $("#typeWorkEdit option:selected").attr("value"),
+                            typeWork: {
+                                id: 0,
+                                name: $("#typeWorkEdit option:selected").text()
+                            },
+                            orderDate: date,
+                            isCompleted: 0
+                        };
+                        $.ajax({
+                            contentType: "application/json",
+                            dataType: "json",
+                            data: JSON.stringify(order),
+                            url: "/api/personal/orders/",
+                            method: "PUT",
+                            success:
+                                function() {
+                                    table.ajax.reload(null, false);
+                                },
+                            error:
+                                function(xmlHttpRequest, textStatus, errorThrown) {
+                                    alert(`Ошибка при редактировании!\n\nСтатус: ${textStatus}\n\n${errorThrown}\n\n${xmlHttpRequest.responseText}`);
+                                }
+                        });
+                        dialogEdit.dialog("close");
+                    }
+
+                    // Форма добавления, привязываем действие к сабмиту
+                    dialogAdd.find("form").on("submit",
+                        function() {
+                            add();
+                        }
+                    );
+                    // Форма редактирования, привязываем действие к сабмиту
+                    dialogEdit.find("form").on("submit",
+                        function() {
+                            edit();
+                        }
+                    );
+                });
+            </script>
+        } // Scripts
+    }
+    
+    // Для мастера ----------------------------------------------------------------------------------------------------
+    if (User.IsInRole("Мастер")) {
+        <br /><br />
+        <h2>Личные данные мастера</h2>
+        <hr />
+        <div class="form-horizontal">
+            <div class="form-group">
+                <div class="col-md-2 control-label"></div>
+                <div class="col-md-3">
+                    <a href="@Model.CurrentUser.AvatarPath" target="_blank">
+                        <img src="@Model.CurrentUser.AvatarPath"
+                             style="width: auto; height: auto; max-height: 250px; max-width: 250px;"
+                             alt="@Model.CurrentUser.UserName-avatar" />
+                    </a>
+                    <form asp-area=""
+                          asp-action="ChangeAvatar"
+                          asp-controller="PersonalCabinet"
+                          method="post"
+                          enctype="multipart/form-data"
+                          id="uploadAvatarFormMaster">
+                        <input type="file" name="uploadedFile" class="input" />
+                    </form>
+                </div>
+            </div>
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="form-group">
+                <label asp-for="CurrentMaster.FirstName" class="col-md-2 control-label">Имя</label>
+                <div class="col-md-3">
+                    <input type="text" name="firstNameMaster" value="@Model.CurrentMaster.FirstName" placeholder="Имя" id="firstNameMaster" class="form-control">
+                    <span asp-validation-for="CurrentMaster.FirstName" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="form-group">
+                <label asp-for="CurrentMaster.LastName" class="col-md-2 control-label">Фамилия</label>
+                <div class="col-md-3">
+                    <input type="text" name="lastNameMaster" value="@Model.CurrentMaster.LastName" placeholder="Фамилия" id="lastNameMaster" class="form-control">
+                    <span asp-validation-for="CurrentMaster.LastName" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="form-group">
+                <label asp-for="CurrentMaster.MobilePhone" class="col-md-2 control-label">Телефон</label>
+                <div class="col-md-3">
+                    <input type="text" name="mobilePhoneMaster" value="@Model.CurrentMaster.MobilePhone" placeholder="Мобильный" id="mobilePhoneMaster" class="form-control">
+                    <span asp-validation-for="CurrentMaster.MobilePhone" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="form-group">
+                <label asp-for="CurrentMaster.Reputation" class="col-md-2 control-label">Репутация</label>
+                <div class="col-md-3">
+                    <input disabled type="text" name="reputationMaster" value="@Model.CurrentMaster.Reputation" placeholder="Репутация" id="reputationMaster" class="form-control">
+                    <span asp-validation-for="CurrentMaster.Reputation" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-md-offset-2 col-md-10">
+                    <button id="buttonSavePrivateDataMaster" type="button" class="btn btn-primary">
+                        <span class="glyphicon glyphicon-save"></span>&nbsp;Сохранить
+                    </button><br />
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-md-2 control-label"></div>
+                <div class="col-md-3">
+                    <p id="messageMaster" class="text-uppercase label label-success"></p>
+                </div>
+            </div>
+            <br />
+        </div>
+
+        <div>
+            <h2>Список заказов адресованных Вам</h2>
+            <hr />
+            <br /><br />
+            @*Разметка таблицы*@
+            <table id="personalorders-master" class="table table-bordered table-hover">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Техника</th>
+                        <th>Клиент</th>
+                        <th>Вид работы</th>
+                        <th>Время заказа</th>
+                        <th>Статус</th>
+                        <th>Опции</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+                <tfoot></tfoot>
+            </table>
+            <br />
+        </div>
+
+        @section Scripts {
+            <script>
+                $(document).ready(function () {
+                    // DataTable jquery
+                    var table = $("#personalorders-master").DataTable({
+                        rowReorder: true,
+                        colReorder: true,
+                        ajax: {
+                            url: "/api/personal/orders/master/@Model.CurrentUser.Id",
+                            dataSrc: ""
+                        },
+                        columns: [
+                            {
+                                data: "id"
+                            },
+                            {
+                                data: "technic.name"
+                            },
+                            {
+                                data: "client.lastName"
+                            },
+                            {
+                                data: "typeWork.name"
+                            },
+                            {
+                                data: "orderDate",
+                                render: function(data, type, row) {
+                                    let dateSplit = data.split('-');
+                                    let timeSplit = data.split(':');
+                                    return type === "display" || type === "filter"
+                                        ? `${dateSplit[2].substring(0, 2)}.${dateSplit[1]}.${dateSplit[0]}
+                                            ${timeSplit[0].substring(timeSplit[0].length - 2, timeSplit[0].length)}:${timeSplit[1]}:${timeSplit[2]}`
+                                        : data;
+                                }
+                            },
+                            {
+                                data: "isCompleted",
+                                render: function(data, type, row) {
+                                    if (data) {
+                                        return "Выполнен";
+                                    } else {
+                                        return "Работаю";
+                                    } // if
+                                }
+                            },
+                            {
+                                data: "id",
+                                render: function(data) {
+                                    return `<button class='btn btn-sm btn-primary mark-order' data-completed-id=${data}>
+                                                Изменить статус
+                                            </button>`;
+                                }
+                            }
+                        ]
+                    });
+
+                    // Изменение состояния готовности заказа
+                    $("#personalorders-master").on("click",
+                        ".mark-order",
+                        function () {
+                            let btn = $(this);
+                            btn.prop('disabled', true);
+                            $.ajax({
+                                url: `../api/orders/${btn.attr("data-completed-id")}`,
+                                method: "GET",
+                                success:
+                                    function (order) {
+                                        checkedOrder(order);
+                                    },
+                                error:
+                                    function (xmlHttpRequest, textStatus, errorThrown) {
+                                        alert(`Ошибка при получении объекта!\n\nСтатус: ${textStatus}\n\n${errorThrown}\n\n${xmlHttpRequest
+                                            .responseText}`);
+                                    }
+                            });
+                        });
+
+                    function checkedOrder(objectEdit) {
+                        let order = objectEdit;
+                        order.isCompleted = !order.isCompleted;
+                        $.ajax({
+                            contentType: "application/json",
+                            dataType: "json",
+                            data: JSON.stringify(order),
+                            url: "../api/orders/",
+                            method: "PUT",
+                            success:
+                                function () {
+                                    table.ajax.reload(null, false);
+                                },
+                            error:
+                                function (xmlHttpRequest, textStatus, errorThrown) {
+                                    alert(`Ошибка при редактировании!\n\nСтатус: ${textStatus}\n\n${errorThrown}\n\n${xmlHttpRequest
+                                        .responseText}`);
+                                }
+                        });
+                    }
+
+                    // Обработчик для сохранения личных данных мастера
+                    $("#buttonSavePrivateDataMaster").on("click",
+                        function () {
+                            let master = {
+                                id: @Model.CurrentMaster.Id,
+                                firstName: $("#firstNameMaster").val(),
+                                lastName: $("#lastNameMaster").val(),
+                                mobilePhone: $("#mobilePhoneMaster").val(),
+                                reputation: @Model.CurrentMaster.Reputation,
+                                guid: "@Model.CurrentMaster.Guid"
+                            };
+                            $("#buttonSavePrivateDataMaster").prop('disabled', true);
+                            $.ajax({
+                                contentType: "application/json",
+                                dataType: "json",
+                                data: JSON.stringify(master),
+                                url: "../api/masters/",
+                                method: "PUT",
+                                success:
+                                    function () {
+                                        $("#messageMaster").text("Успешно! Страница будет перезагружена.");
+                                        let timerId = setTimeout(() => {
+                                            $("#messageMaster").text("");
+                                            $("#buttonSavePrivateDataMaster").prop('disabled', false);
+                                            $("#uploadAvatarFormMaster").submit();
+                                        }, 2000);
+                                    },
+                                error:
+                                    function (xmlHttpRequest, textStatus, errorThrown) {
+                                        alert(`Ошибка при сохранении личных данных!\n\nСтатус: ${textStatus}\n\n${errorThrown}\n\n${xmlHttpRequest
+                                            .responseText}`);
+                                    }
+                            });
+                        });
+                });
+            </script>
+        } // Scripts
+    }
+} else {
+    <h2>Доступно только для авторизованных пользователей!</h2>
+}

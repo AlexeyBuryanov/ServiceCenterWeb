@@ -1,0 +1,168 @@
+﻿@model UsersListViewModel
+@addTagHelper "*, ServiceCenterWeb"
+
+@{
+    ViewData["Title"] = "Зарегистрированные пользователи";
+    Layout = "/Views/Shared/_Layout.cshtml";
+}
+
+<br /><br />
+<h2>Зарегистрированные пользователи</h2>
+<br />
+<a asp-area=""
+   asp-controller="AdminPanel"
+   asp-action="Index"
+   title="Панель администратора"
+   class="btn btn-sm btn-primary">
+    <span class="glyphicon glyphicon-arrow-left"></span>&nbsp;Панель администратора
+</a>
+<hr />
+
+<form method="get">
+    <div class="form-group form-inline">
+        <label asp-for="FilterUserViewModel.SelectedEmail" class="control-label">E-mail: </label>
+        @Html.TextBox("email", Model.FilterUserViewModel.SelectedEmail, new { @class = "form-control" })
+        <input type="submit" value="Поиск" class="btn btn-default" />
+        <a asp-area="" asp-controller="Users" asp-action="Create" class="btn btn-sm btn-primary">
+            <span class="glyphicon glyphicon-plus"></span>&nbsp;Добавить пользователя
+        </a>
+    </div>
+</form>
+
+<page-link page-model="Model.PageViewModel"
+           page-action="Users"
+           page-url-email="@(Model.FilterUserViewModel.SelectedEmail)"
+           page-url-sortorder="@(Model.SortViewModel.Current)">
+</page-link>
+<table id="users" class="table table-bordered table-hover">
+    <thead>
+    <tr>
+        <th>
+            <a asp-action="Users"
+               asp-route-sortOrder="@(Model.SortViewModel.UserNameSort)"
+               asp-route-email="@(Model.FilterUserViewModel.SelectedEmail)">
+                Имя пользователя
+            </a>
+        </th>
+        <th>
+            <a asp-action="Users"
+               asp-route-sortOrder="@(Model.SortViewModel.EmailSort)"
+               asp-route-email="@(Model.FilterUserViewModel.SelectedEmail)">
+                E-mail
+            </a>
+        </th>
+        <th>
+            <a asp-action="Users"
+               asp-route-sortOrder="@(Model.SortViewModel.ConfirmEmailSort)"
+               asp-route-email="@(Model.FilterUserViewModel.SelectedEmail)">
+                Подтверждение почты
+            </a>
+        </th>
+        <th>
+            <a asp-action="Users"
+               asp-route-sortOrder="@(Model.SortViewModel.PhoneNumberSort)"
+               asp-route-email="@(Model.FilterUserViewModel.SelectedEmail)">
+                Телефон
+            </a>
+        </th>
+        <th>
+            <a asp-action="Users"
+               asp-route-sortOrder="@(Model.SortViewModel.ConfirmPhoneNumberSort)"
+               asp-route-email="@(Model.FilterUserViewModel.SelectedEmail)">
+                Подтверждение тел.
+            </a>
+        </th>
+        <th>
+            <a asp-action="Users"
+               asp-route-sortOrder="@(Model.SortViewModel.TwoFaSort)"
+               asp-route-email="@(Model.FilterUserViewModel.SelectedEmail)">
+                2FA
+            </a>
+        </th>
+        <th>
+            <a asp-action="Users"
+               asp-route-sortOrder="@(Model.SortViewModel.LockoutEndSort)"
+               asp-route-email="@(Model.FilterUserViewModel.SelectedEmail)">
+                До разблокировки
+            </a>
+        </th>
+        <th>
+            <a asp-action="Users"
+               asp-route-sortOrder="@(Model.SortViewModel.LockoutEnabledSort)"
+               asp-route-email="@(Model.FilterUserViewModel.SelectedEmail)">
+                Блокировка
+            </a>
+        </th>
+        <th>
+            <a asp-action="Users"
+               asp-route-sortOrder="@(Model.SortViewModel.AccessFailedCountSort)"
+               asp-route-email="@(Model.FilterUserViewModel.SelectedEmail)">
+                Неудачных попыток входа
+            </a>
+        </th>
+        <th>Опции</th>
+    </tr>
+    </thead>
+    <tbody>
+    @foreach (var user in Model.Users) {
+        <tr>
+            <td>@user.UserName</td>
+            <td>@user.Email</td>
+            <td>
+                @{var emailConf = user.EmailConfirmed ? "Да" : "Нет";}
+                @emailConf
+            </td>
+            <td>@user.PhoneNumber</td>
+            <td>
+                @{var phoneConf = user.PhoneNumberConfirmed ? "Да" : "Нет";}
+                @phoneConf
+            </td>
+            <td>
+                @{var twofa = user.TwoFactorEnabled ? "Да" : "Нет";}
+                @twofa
+            </td>
+            <td>
+                @{var lockedTime = user.LockoutEnd.HasValue
+                                       ? user.LockoutEnd?.ToString("HH:mm:ss - dd.MM.yyyy")
+                                       : "Доступ разрешён";}
+                @lockedTime
+            </td>
+            <td>
+                @{var lockout = user.LockoutEnabled ? "Нет" : "Да";}
+                @lockout
+            </td>
+            <td>@user.AccessFailedCount</td>
+            <td>
+                <form asp-controller="Users" asp-action="Delete" asp-route-id="@user.Id" method="post">
+                    <a class="btn btn-sm btn-primary" asp-controller="Users" asp-action="Edit" asp-route-id="@user.Id" style="width: 100px;">
+                        <span class="glyphicon glyphicon-edit"></span>&nbsp;Изменить
+                    </a>
+                    <a class="btn btn-sm btn-primary" asp-controller="Roles" asp-action="Edit" asp-route-id="@user.Id" style="width: 100px;">
+                        <span class="glyphicon glyphicon-console"></span>&nbsp;Роли
+                    </a>
+                    <a class="btn btn-sm btn-primary" asp-controller="Users" asp-action="ChangePassword" asp-route-id="@user.Id" style="width: 100px;">
+                        <span class="glyphicon glyphicon-barcode"></span>&nbsp;Пароль
+                    </a>
+                    <button type="submit" class="btn btn-sm btn-danger" style="width: 100px;">
+                        <span class="glyphicon glyphicon-remove"></span>&nbsp;Удалить
+                    </button>
+                </form>
+            </td>
+        </tr>
+    }
+    </tbody>
+    <tfoot>
+    <tr>
+        <th>Имя пользователя</th>
+        <th>E-mail</th>
+        <th>Подтверждение почты</th>
+        <th>Телефон</th>
+        <th>Подтверждение тел.</th>
+        <th>2FA</th>
+        <th>До разблокировки</th>
+        <th>Блокировка</th>
+        <th>Неудачных попыток входа</th>
+        <th>Опции</th>
+    </tr>
+    </tfoot>
+</table>

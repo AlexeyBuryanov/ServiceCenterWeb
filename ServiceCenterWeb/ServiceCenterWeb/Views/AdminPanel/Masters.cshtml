@@ -1,0 +1,305 @@
+﻿@{
+    ViewData["Title"] = "Мастера по ремонту";
+    Layout = "/Views/Shared/_Layout.cshtml";
+}
+
+<br /><br />
+<h2>Список мастеров сервисного центра</h2>
+<br />
+<a asp-area="" asp-controller="AdminPanel" asp-action="Index"
+   title="Панель администратора"
+   class="btn btn-sm btn-primary">
+    <span class="glyphicon glyphicon-arrow-left"></span>&nbsp;Панель администратора
+</a>
+<hr />
+<button id="buttonAdd" class="btn btn-primary btn-sm">
+    <span class="glyphicon glyphicon-plus"></span>&nbsp;Добавить мастера
+</button>
+<br /><br />
+@*Разметка таблицы*@
+<table id="masters" class="table table-bordered table-hover">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Имя</th>
+            <th>Фамилия</th>
+            <th>Мобильный</th>
+            <th>Репутация</th>
+            <th>Опции</th>
+        </tr>
+    </thead>
+    <tbody></tbody>
+    <tfoot></tfoot>
+</table>
+<br />
+
+@*Разметка диалогов*@
+<div id="dialogAdd" title="Добавление нового мастера" style="visibility: collapse;">
+    <form>
+        <fieldset>
+            <label for="firstNameAdd">Имя</label>
+            <input type="text" name="firstNameAdd" placeholder="Имя" id="firstNameAdd" class="text ui-widget-content ui-corner-all">
+            <label for="lastNameAdd">Фамилия</label>
+            <input type="text" name="lastNameAdd" placeholder="Фамилия" id="lastNameAdd" class="text ui-widget-content ui-corner-all">
+            <label for="mobilePhoneAdd">Мобильный</label>
+            <input type="text" name="mobilePhoneAdd" placeholder="Номер иобмльного" id="mobilePhoneAdd" class="text ui-widget-content ui-corner-all">
+            <label for="reputationAdd">Репутация</label>
+            <input type="text" name="reputationAdd" value="0" placeholder="Репутация" id="reputationAdd" class="text ui-widget-content ui-corner-all">
+            <input type="submit" tabindex="-1" style="position:absolute; top:-1000px">
+        </fieldset>
+    </form>
+</div>
+<div id="dialogEdit" style="visibility: collapse;">
+    <form>
+        <fieldset>
+            <label for="firstNameEdit">Имя</label>
+            <input type="text" name="firstNameEdit" placeholder="Новое имя" id="firstNameEdit" class="text ui-widget-content ui-corner-all">
+            <label for="lastNameEdit">Фамилия</label>
+            <input type="text" name="lastNameEdit" placeholder="Новая фамилия" id="lastNameEdit" class="text ui-widget-content ui-corner-all">
+            <label for="mobilePhoneEdit">Мобильный</label>
+            <input type="text" name="mobilePhoneEdit" placeholder="Новый телефон" id="mobilePhoneEdit" class="text ui-widget-content ui-corner-all">
+            <label for="reputationEdit">Репутация</label>
+            <input type="text" name="reputationEdit" placeholder="Новая репутация" id="reputationEdit" class="text ui-widget-content ui-corner-all">
+            <input type="submit" tabindex="-1" style="position:absolute; top:-1000px">
+        </fieldset>
+    </form>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            var objectEdit,
+                firstNameAdd = $("#firstNameAdd"),
+                lastNameAdd = $("#lastNameAdd"),
+                mobilePhoneeAdd = $("#mobilePhoneAdd"),
+                reputationAdd = $("#reputationAdd"),
+                firstNameEdit = $("#firstNameEdit"),
+                lastNameEdit = $("#lastNameEdit"),
+                mobilePhoneEdit = $("#mobilePhoneEdit"),
+                reputationEdit = $("#reputationEdit");
+            // Диалог добавления
+            var dialogAdd = $("#dialogAdd").dialog({
+                autoOpen: false,
+                height: 500,
+                width: 500,
+                modal: true,
+                buttons: {
+                    "Добавить": add,
+                    Отмена:
+                        function () {
+                            dialogAdd.dialog("close");
+                        }
+                }
+            });
+            // Диалог редактирования
+            var dialogEdit = $("#dialogEdit").dialog({
+                autoOpen: false,
+                height: 500,
+                width: 500,
+                modal: true,
+                buttons: {
+                    "Редактировать": edit,
+                    Отмена:
+                        function () {
+                            dialogEdit.dialog("close");
+                        }
+                }
+            });
+
+            // Для удобства показа
+            function showDialogAdd() {
+                $("#dialogAdd").css("visibility", "visible");
+                dialogAdd.dialog("open");
+            }
+            function showDialogEdit() {
+                $("#dialogEdit").css("visibility", "visible");
+                dialogEdit.dialog("open");
+            }
+
+            // Назначаем обработчик по клику для кнопки добавления
+            $("#buttonAdd").on("click", function () {
+                showDialogAdd();
+            });
+
+            // DataTable jquery
+            var table = $("#masters").DataTable({
+                //select: true,      - выделение
+                //scrollY: 550,      - размер области скролинга
+                //deferRender: true, - отложенный рендеринг
+                //scroller: true,    - скроллер внутри таблицы
+                //dom: 'Bfrtip',     - для кнопок экспорта
+                //buttons: [
+                //    'copyHtml5',
+                //    'excelHtml5',
+                //    'csvHtml5',
+                //    'pdfHtml5',
+                //    {
+                //        extend: 'print',
+                //        customize:
+                //            function(win) {
+                //                $(win.document.body)
+                //                    .css('font-size', '10pt')
+                //                    .prepend(
+                //                        '<img src="http://datatables.net/media/images/logo-fade.png" style="position:absolute; top:0; left:0;" />'
+                //                    );
+                //                $(win.document.body).find('table')
+                //                    .addClass('compact')
+                //                    .css('font-size', 'inherit');
+                //            }
+                //    },
+                //    {
+                //        text: '<span class="glyphicon glyphicon-plus"></span>&nbsp;Добавить мастера',
+                //        className: "btn btn-primary",
+                //        action:
+                //            function() {
+                //                showDialogAdd();
+                //            }
+                //    }
+                //],
+                rowReorder: true,
+                colReorder: true,
+                ajax: {
+                    url: "../api/masters/",
+                    dataSrc: ""
+                },
+                columns: [
+                    {
+                        data: "id"
+                    },
+                    {
+                        data: "firstName"
+                    },
+                    {
+                        data: "lastName"
+                    },
+                    {
+                        data: "mobilePhone"
+                    },
+                    {
+                        data: "reputation"
+                    },
+                    {
+                        data: "id",
+                        render: function (data) {
+                            return `<button class='btn btn-sm btn-danger delete-master' data-master-id=${data}>
+                                                        <span class="glyphicon glyphicon-remove"></span>&nbsp;Удалить
+                                                    </button>
+                                                    <button class='btn btn-sm btn-primary edit-master' data-master-id=${data}>
+                                                        <span class="glyphicon glyphicon-edit"></span>&nbsp;Изменить
+                                                    </button>`;
+                        }
+                    }
+                ]
+            });
+
+            // Удаление
+            $("#masters").on("click", ".delete-master",
+                function () {
+                    let button = $(this);
+                    if (confirm(`Вы действительно хотите удалить мастера с ID ${button.attr("data-master-id")}?`)) {
+                        $.ajax({
+                            url: `../api/masters/${button.attr("data-master-id")}`,
+                            method: "DELETE",
+                            success:
+                                function () {
+                                    table.row(button.parents("tr")).remove().draw();
+                                },
+                            error:
+                                function (xmlHttpRequest, textStatus, errorThrown) {
+                                    alert(`Ошибка при удалении!\n\nСтатус: ${textStatus}\n\n${errorThrown}`);
+                                }
+                        });
+                    }
+                });
+            // Редактирование
+            $("#masters").on("click", ".edit-master",
+                function () {
+                    let button = $(this);
+                    $.ajax({
+                        url: `../api/masters/${button.attr("data-master-id")}`,
+                        method: "GET",
+                        success:
+                            function (master) {
+                                objectEdit = master;
+                                firstNameEdit.val(objectEdit.firstName);
+                                lastNameEdit.val(objectEdit.lastName);
+                                mobilePhoneEdit.val(objectEdit.mobilePhone);
+                                reputationEdit.val(objectEdit.reputation);
+                                dialogEdit.dialog('option', 'title', `Редактирование мастера с ID=${objectEdit.id}`);
+                                showDialogEdit();
+                            },
+                        error:
+                            function (xmlHttpRequest, textStatus, errorThrown) {
+                                alert(`Ошибка при получении объекта!\n\nСтатус: ${textStatus}\n\n${errorThrown}`);
+                            }
+                    });
+                });
+
+            // Функция добавления
+            function add() {
+                let master = {
+                    id: 0,
+                    firstName: firstNameAdd.val(),
+                    lastName: lastNameAdd.val(),
+                    mobilePhone: mobilePhoneeAdd.val(),
+                    reputation: reputationAdd.val()
+                };
+                $.ajax({
+                    contentType: "application/json",
+                    dataType: "json",
+                    data: JSON.stringify(master),
+                    url: "../api/masters/",
+                    method: "POST",
+                    success:
+                        function () {
+                            table.ajax.reload(null, false);
+                        },
+                    error:
+                        function (xmlHttpRequest, textStatus, errorThrown) {
+                            alert(`Ошибка при добавлении!\n\nСтатус: ${textStatus}\n\n${errorThrown}`);
+                        }
+                });
+                dialogAdd.dialog("close");
+            }
+            // Функция редактирования
+            function edit() {
+                let master = {
+                    id: objectEdit.id,
+                    firstName: firstNameEdit.val(),
+                    lastName: lastNameEdit.val(),
+                    mobilePhone: mobilePhoneEdit.val(),
+                    reputation: reputationEdit.val()
+                };
+                $.ajax({
+                    contentType: "application/json",
+                    dataType: "json",
+                    data: JSON.stringify(master),
+                    url: "../api/masters/",
+                    method: "PUT",
+                    success:
+                        function () {
+                            table.ajax.reload(null, false);
+                        },
+                    error:
+                        function (xmlHttpRequest, textStatus, errorThrown) {
+                            alert(`Ошибка при редактировании!\n\nСтатус: ${textStatus}\n\n${errorThrown}`);
+                        }
+                });
+                dialogEdit.dialog("close");
+            }
+
+            // Форма добавления, привязываем действие к сабмиту
+            dialogAdd.find("form").on("submit",
+                function () {
+                    add();
+                }
+            );
+            // Форма редактирования, привязываем действие к сабмиту
+            dialogEdit.find("form").on("submit",
+                function () {
+                    edit();
+                }
+            );
+        });
+    </script>
+}

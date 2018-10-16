@@ -1,0 +1,68 @@
+﻿@model List<IdentityRole>
+
+@{
+    ViewData["Title"] = "Настройка ролей";
+    Layout = "/Views/Shared/_Layout.cshtml";
+}
+
+<br /><br />
+<h2>Список ролей</h2>
+<br />
+<a asp-area=""
+   asp-controller="AdminPanel"
+   asp-action="Index"
+   title="Панель администратора"
+   class="btn btn-sm btn-primary">
+    <span class="glyphicon glyphicon-arrow-left"></span>&nbsp;Панель администратора
+</a>
+<hr />
+<a asp-area=""
+   asp-controller="Roles"
+   asp-action="Create"
+   class="btn btn-sm btn-primary">
+    <span class="glyphicon glyphicon-plus"></span>&nbsp;Добавить роль
+</a>
+<br />
+<br />
+<table id="users" class="table table-bordered table-hover">
+    <thead>
+        <tr>
+            <th>Роль</th>
+            <th>Опции</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var role in Model) {
+            <tr>
+                <td>@role.Name</td>
+                <td>
+                    @if (role.Name != "Админ") {
+                        <form id="deleteForm"
+                              asp-area=""
+                              asp-controller="Roles"
+                              asp-action="Delete"
+                              asp-route-id="@role.Id"
+                              method="post">
+                            <button type="submit" class="btn btn-sm btn-danger">
+                                <span class="glyphicon glyphicon-remove"></span>&nbsp;Удалить
+                            </button>
+                        </form>
+                    }
+                </td>
+            </tr>
+        }
+    </tbody>
+    <tfoot>
+        <tr>
+            <th>Роль</th>
+            <th>Опции</th>
+        </tr>
+    </tfoot>
+</table>
+<a asp-area=""
+   asp-controller="Roles"
+   asp-action="Create"
+   class="btn btn-sm btn-primary">
+    <span class="glyphicon glyphicon-plus"></span>&nbsp;Добавить роль
+</a>
+<br />

@@ -4,6 +4,7 @@
 * Identity .NET Core;
 * Work with files;
 * CRUD operations;
+* jQuery UI;
 * jQuery DataTable;
 * AJAX;
 * WebAPI .NET Core;

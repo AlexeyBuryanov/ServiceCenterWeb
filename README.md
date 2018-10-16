@@ -6,6 +6,8 @@
 * Identity .NET Core;
 * Work with files;
 * CRUD operations;
+* Bootstrap;
+* jQuery;
 * jQuery UI;
 * jQuery DataTable;
 * AJAX;

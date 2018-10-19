@@ -4,6 +4,7 @@
 
 * ASP.NET Core 2.1 MVC;
 * Identity .NET Core;
+* MS SQL DB;
 * Work with files;
 * CRUD operations;
 * Bootstrap;
